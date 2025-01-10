@@ -1,9 +1,11 @@
 package controller
 
 import (
+	"coze-discord-proxy/common"
 	"coze-discord-proxy/discord"
 	"coze-discord-proxy/model"
 	"encoding/json"
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
@@ -20,6 +22,7 @@ import (
 func ChannelCreate(c *gin.Context) {
 
 	var channelModel model.ChannelReq
+	channelModel.Type = 0
 	err := json.NewDecoder(c.Request.Body).Decode(&channelModel)
 	if err != nil {
 		c.JSON(http.StatusOK, gin.H{
@@ -32,12 +35,13 @@ func ChannelCreate(c *gin.Context) {
 	var channelId string
 
 	if channelModel.ParentId == "" {
-		channelId, err = discord.ChannelCreate(discord.GuildId, channelModel.Name)
+		channelId, err = discord.ChannelCreate(discord.GuildId, channelModel.Name, channelModel.Type)
 	} else {
-		channelId, err = discord.ChannelCreateComplex(discord.GuildId, channelModel.ParentId, channelModel.Name)
+		channelId, err = discord.ChannelCreateComplex(discord.GuildId, channelModel.ParentId, channelModel.Name, channelModel.Type)
 	}
 
 	if err != nil {
+		common.LogError(c, fmt.Sprintf("创建频道时异常 %s", err.Error()))
 		c.JSON(http.StatusOK, gin.H{
 			"success": false,
 			"message": "discord创建频道异常",
@@ -75,6 +79,31 @@ func ChannelDel(c *gin.Context) {
 	}
 
 	channelId, err := discord.ChannelDel(channelId)
+	if err != nil {
+		c.JSON(http.StatusOK, gin.H{
+			"success": false,
+			"message": "discord删除频道异常",
+		})
+	} else {
+
+		c.JSON(http.StatusOK, gin.H{
+			"success": true,
+			"message": "discord删除频道成功",
+		})
+	}
+	return
+}
+
+// ChannelDelAllCdp 删除全部CDP临时频道[谨慎调用]
+// @Summary 删除全部CDP临时频道[谨慎调用]
+// @Description 删除全部CDP临时频道[谨慎调用]
+// @Tags channel
+// @Accept json
+// @Produce json
+// @Success 200 {object} string "Successful response"
+// @Router /api/del/all/cdp [get]
+func ChannelDelAllCdp(c *gin.Context) {
+	_, err := discord.ChannelDelAllForCdp(c)
 	if err != nil {
 		c.JSON(http.StatusOK, gin.H{
 			"success": false,

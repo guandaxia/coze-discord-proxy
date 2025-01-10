@@ -9,9 +9,9 @@ ENV GO111MODULE=on \
 # 设置工作目录
 WORKDIR /build
 
-# 复制 go.mod 和 go.sum 文件，先下载依赖
+# 复制 go.mod 和 go.sum 文件,先下载依赖
 COPY go.mod go.sum ./
-ENV GOPROXY=https://goproxy.cn,direct
+#ENV GOPROXY=https://goproxy.cn,direct
 RUN go mod download
 
 # 复制整个项目并构建可执行文件
@@ -30,6 +30,6 @@ COPY --from=builder /coze-discord-proxy .
 # 暴露端口
 EXPOSE 7077
 # 工作目录
-WORKDIR /data
+WORKDIR /app/coze-discord-proxy/data
 # 设置入口命令
 ENTRYPOINT ["/coze-discord-proxy"]
