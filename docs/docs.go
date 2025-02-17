@@ -81,9 +81,9 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/chat": {
-            "post": {
-                "description": "发送消息",
+        "/api/del/all/cdp": {
+            "get": {
+                "description": "删除全部CDP临时频道[谨慎调用]",
                 "consumes": [
                     "application/json"
                 ],
@@ -91,37 +91,14 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "chat"
+                    "channel"
                 ],
-                "summary": "发送消息",
-                "parameters": [
-                    {
-                        "description": "chatModel",
-                        "name": "chatModel",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/model.ChatReq"
-                        }
-                    },
-                    {
-                        "type": "string",
-                        "description": "proxy-secret",
-                        "name": "proxy-secret",
-                        "in": "header"
-                    },
-                    {
-                        "type": "string",
-                        "description": "out-time",
-                        "name": "out-time",
-                        "in": "header"
-                    }
-                ],
+                "summary": "删除全部CDP临时频道[谨慎调用]",
                 "responses": {
                     "200": {
                         "description": "Successful response",
                         "schema": {
-                            "$ref": "#/definitions/model.ReplyResp"
+                            "type": "string"
                         }
                     }
                 }
@@ -252,6 +229,37 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/v1/models": {
+            "get": {
+                "description": "模型列表-openai",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "openai"
+                ],
+                "summary": "模型列表-openai",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Authorization",
+                        "name": "Authorization",
+                        "in": "header"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful response",
+                        "schema": {
+                            "$ref": "#/definitions/model.OpenaiModelListResponse"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -263,6 +271,9 @@ const docTemplate = `{
                 },
                 "parentId": {
                     "type": "string"
+                },
+                "type": {
+                    "type": "number"
                 }
             }
         },
@@ -277,20 +288,6 @@ const docTemplate = `{
                 }
             }
         },
-        "model.ChatReq": {
-            "type": "object",
-            "properties": {
-                "channelId": {
-                    "type": "string"
-                },
-                "content": {
-                    "type": "string"
-                },
-                "stream": {
-                    "type": "boolean"
-                }
-            }
-        },
         "model.OpenAIChatCompletionRequest": {
             "type": "object",
             "properties": {
@@ -302,6 +299,9 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/model.OpenAIChatMessage"
                     }
+                },
+                "model": {
+                    "type": "string"
                 },
                 "stream": {
                     "type": "boolean"
@@ -329,6 +329,12 @@ const docTemplate = `{
                 "object": {
                     "type": "string"
                 },
+                "suggestions": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
                 "system_fingerprint": {
                     "type": "string"
                 },
@@ -340,9 +346,7 @@ const docTemplate = `{
         "model.OpenAIChatMessage": {
             "type": "object",
             "properties": {
-                "content": {
-                    "type": "string"
-                },
+                "content": {},
                 "role": {
                     "type": "string"
                 }
@@ -376,6 +380,20 @@ const docTemplate = `{
                 }
             }
         },
+        "model.OpenAIImagesGenerationDataResponse": {
+            "type": "object",
+            "properties": {
+                "b64_json": {
+                    "type": "string"
+                },
+                "revised_prompt": {
+                    "type": "string"
+                },
+                "url": {
+                    "type": "string"
+                }
+            }
+        },
         "model.OpenAIImagesGenerationRequest": {
             "type": "object",
             "properties": {
@@ -387,6 +405,9 @@ const docTemplate = `{
                 },
                 "prompt": {
                     "type": "string"
+                },
+                "response_format": {
+                    "type": "string"
                 }
             }
         },
@@ -396,15 +417,19 @@ const docTemplate = `{
                 "created": {
                     "type": "integer"
                 },
+                "dailyLimit": {
+                    "type": "boolean"
+                },
                 "data": {
                     "type": "array",
                     "items": {
-                        "type": "object",
-                        "properties": {
-                            "url": {
-                                "type": "string"
-                            }
-                        }
+                        "$ref": "#/definitions/model.OpenAIImagesGenerationDataResponse"
+                    }
+                },
+                "suggestions": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
                     }
                 }
             }
@@ -434,17 +459,28 @@ const docTemplate = `{
                 }
             }
         },
-        "model.ReplyResp": {
+        "model.OpenaiModelListResponse": {
             "type": "object",
             "properties": {
-                "content": {
-                    "type": "string"
-                },
-                "embedUrls": {
+                "data": {
                     "type": "array",
                     "items": {
-                        "type": "string"
+                        "$ref": "#/definitions/model.OpenaiModelResponse"
                     }
+                },
+                "object": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.OpenaiModelResponse": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "object": {
+                    "type": "string"
                 }
             }
         },

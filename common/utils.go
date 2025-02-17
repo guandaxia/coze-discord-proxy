@@ -1,6 +1,7 @@
 package common
 
 import (
+	"encoding/base64"
 	"fmt"
 	"github.com/google/uuid"
 	jsoniter "github.com/json-iterator/go"
@@ -172,4 +173,92 @@ func Obj2Bytes(obj interface{}) ([]byte, error) {
 		return nil, err
 	}
 	return bytes, nil
+}
+
+// IsImageBase64 判断给定的字符串是否可能是 Base64 编码
+func IsImageBase64(s string) bool {
+	// 检查字符串是否符合数据URL的格式
+	//if !strings.HasPrefix(s, "data:image/") || !strings.Contains(s, ";base64,") {
+	//	return false
+	//}
+
+	if !strings.Contains(s, ";base64,") {
+		return false
+	}
+
+	// 获取";base64,"后的Base64编码部分
+	dataParts := strings.Split(s, ";base64,")
+	if len(dataParts) != 2 {
+		return false
+	}
+	base64Data := dataParts[1]
+
+	// 尝试Base64解码
+	_, err := base64.StdEncoding.DecodeString(base64Data)
+	return err == nil
+}
+
+// IsURL 判断给定的字符串是否可能是 URL
+func IsURL(s string) bool {
+	return strings.HasPrefix(s, "http://") || strings.HasPrefix(s, "https://") || strings.HasPrefix(s, "ftp://")
+}
+
+// Contains checks if a string is present in a slice of strings.
+func SliceContains(slice []string, str string) bool {
+	for _, item := range slice {
+		if strings.Contains(str, item) {
+			return true
+		}
+	}
+	return false
+}
+
+// RandomElement 返回给定切片中的随机元素
+func RandomElement[T any](slice []T) (T, error) {
+	if len(slice) == 0 {
+		var zero T
+		return zero, fmt.Errorf("empty slice")
+	}
+
+	// 确保每次随机都不一样
+	rand.Seed(time.Now().UnixNano())
+
+	// 随机选择一个索引
+	index := rand.Intn(len(slice))
+	return slice[index], nil
+}
+
+func ReverseSegment(s string, segLen int) []string {
+	var result []string
+	runeSlice := []rune(s) // 将字符串转换为rune切片，以正确处理多字节字符
+
+	// 从字符串末尾开始切片
+	for i := len(runeSlice); i > 0; i -= segLen {
+		// 检查是否到达或超过字符串开始
+		if i-segLen < 0 {
+			// 如果超过，直接从字符串开始到当前位置的所有字符都添加到结果切片中
+			result = append([]string{string(runeSlice[0:i])}, result...)
+		} else {
+			// 否则，从i-segLen到当前位置的子切片添加到结果切片中
+			result = append([]string{string(runeSlice[i-segLen : i])}, result...)
+		}
+	}
+	return result
+}
+
+func FilterSlice(slice []string, filter string) []string {
+	var result []string
+	for _, value := range slice {
+		if value != filter {
+			result = append(result, value)
+		}
+	}
+	return result
+}
+
+// isSameDay 检查两个时间是否为同一天
+func IsSameDay(t1, t2 time.Time) bool {
+	y1, m1, d1 := t1.Date()
+	y2, m2, d2 := t2.Date()
+	return y1 == y2 && m1 == m2 && d1 == d2
 }

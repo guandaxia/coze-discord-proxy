@@ -7,9 +7,11 @@ package main
 import (
 	"context"
 	"coze-discord-proxy/common"
+	"coze-discord-proxy/common/config"
 	"coze-discord-proxy/discord"
 	"coze-discord-proxy/middleware"
 	"coze-discord-proxy/router"
+	"errors"
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"os"
@@ -23,14 +25,14 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	go discord.StartBot(ctx, os.Getenv("BOT_TOKEN"))
+	go discord.StartBot(ctx, discord.BotToken)
 
 	common.SetupLogger()
 	common.SysLog("COZE-DISCORD-PROXY " + common.Version + " started")
 	if os.Getenv("GIN_MODE") != "debug" {
 		gin.SetMode(gin.ReleaseMode)
 	}
-	if common.DebugEnabled {
+	if config.DebugEnabled {
 		common.SysLog("running in debug mode")
 	}
 
@@ -53,7 +55,7 @@ func main() {
 	}
 
 	go func() {
-		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			common.FatalLog("failed to start HTTP server: " + err.Error())
 		}
 	}()
